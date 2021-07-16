@@ -24,11 +24,11 @@ class nebula:
         self.radius = radius
 
 class starbase:
-    def __init__(self,line_number,ID,level,owner,modules,buildings) -> None:
+    def __init__(self,line_number,ID,level,owner_ID,modules,buildings) -> None:
 
         self.line_number = line_number
         self.ID = ID
         self.level = level
-        self.owner = owner
+        self.owner_ID = owner_ID
         self.modules = modules
         self.buildings = buildings
