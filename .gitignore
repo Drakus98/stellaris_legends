@@ -1,5 +1,9 @@
-#Testing_savefile
+#Testing_files
 gamestate
+*.ipynb
+
+#VSCode spell checker
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

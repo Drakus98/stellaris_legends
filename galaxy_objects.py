@@ -1,5 +1,5 @@
 class system:
-    def __init__(self,line_number,ID,name,x_coord,y_coord,owner_ID,starbase_ID) -> None:
+    def __init__(self,line_number,ID,name,x_coord,y_coord,owner_ID,starbase_ID,connections) -> None:
         
         #critical attributes: these are to be found
         self.ID = ID
@@ -7,6 +7,7 @@ class system:
         self.x_coord = x_coord
         self.y_coord = y_coord
         self.owner_ID = owner_ID
+        self.connections = connections
 
         #intermediate attributes: these are used to find critical attributes
         self.starbase_ID = starbase_ID
