@@ -61,6 +61,8 @@ def system_find_starbase_ID(line_number,gamestate):
 def system_find_connections(ID,line_number,gamestate):
     connections = []
     for sub_line_number in range(line_number + 1, line_number + 100):
+        if "coordinate={" in gamestate[sub_line_number]:
+            break        
         if "to=" in gamestate[sub_line_number]:
             target = int(gamestate[sub_line_number][19:])
             if target > ID:
