@@ -1,6 +1,7 @@
 #Testing_files
 gamestate
 *.ipynb
+*.png
 
 #VSCode spell checker
 .vscode

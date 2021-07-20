@@ -1,4 +1,9 @@
+from os import system
 import galaxy_objects as ob
+import numpy as np
+import skimage.draw as dw
+import skimage.io as aiyo
+import skimage.transform as tf
 
 gamestate = open("gamestate").read().replace("\t","    ").splitlines()
 
@@ -17,8 +22,8 @@ def nebula_organizer(current_line,gamestate):
             #Attribute collection
             ID = len(nebula_list)
             name = gamestate[line_number + 7][11:-1]
-            x_coord = float(gamestate[line_number + 2][10:])
-            y_coord = float(gamestate[line_number + 3][10:])
+            x_coord = int(float(gamestate[line_number + 2][10:]))
+            y_coord = int(float(gamestate[line_number + 3][10:]))
             radius = int(gamestate[line_number + 8][11:])
             #Object creation
             nebula_list.append(ob.nebula(line_number,ID,name,x_coord,y_coord,radius))
@@ -36,11 +41,11 @@ def system_organizer(current_line,gamestate):
             #Attribute collection
             ID = len(system_list)
             name = gamestate[line_number+1][14:-1]
-            x_coord = float(gamestate[line_number - 5][14:])
-            y_coord = float(gamestate[line_number - 4][14:])
+            x_coord = int(float(gamestate[line_number - 5][14:]))
+            y_coord = int(float(gamestate[line_number - 4][14:]))
             owner_ID = -1
             starbase_ID = system_find_starbase_ID(line_number,gamestate)
-            connections = "None"
+            connections = system_find_connections(ID,line_number,gamestate)
             #Object creation
             system_list.append(ob.system(line_number,ID,name,x_coord,y_coord,owner_ID,starbase_ID,connections))
             #Line increment for speed
@@ -54,6 +59,17 @@ def system_find_starbase_ID(line_number,gamestate):
         if ("starbase=" in gamestate[sub_line_number]) and ("dpe_recent_talent" not in gamestate[sub_line_number]):
             return int(gamestate[sub_line_number][17:])
     return -1
+
+def system_find_connections(ID,line_number,gamestate):
+    connections = []
+    for sub_line_number in range(line_number + 1, line_number + 100):
+        if "coordinate={" in gamestate[sub_line_number]:
+            break        
+        if "to=" in gamestate[sub_line_number]:
+            target = int(gamestate[sub_line_number][19:])
+            if target > ID:
+                connections.append(target)
+    return connections
 
 def starbase_organizer(current_line,gamestate):
     starbase_list = []
@@ -85,12 +101,70 @@ def system_find_owner(system_list,starbase_list):
             if system.starbase_ID == starbase.ID:
                 system.owner_ID = starbase.owner_ID
                 break
+    return None
+
+def system_coord_conv(system_list,img_size,multiplier):
+    for system in system_list:
+        system.x_coord = ((system.x_coord * multiplier) + int((img_size/2)))
+        system.y_coord = ((system.y_coord * multiplier) + int((img_size/2)))
+    return None
+
+def colorify(fig):
+    """Given a 2D array, returns that array stacked thrice over (i.e. converts greyscale to color)"""
+    return np.stack((fig,fig,fig),axis=-1)
+
+
+def draw_systems(map_file,system_list):
+    count = 0
+    for system in system_list:
+        map_file[dw.disk((system.x_coord,system.y_coord),4)]=(230,30,37)
+    return None
+
+
+def draw_lines(map_file,system_list):
+    for origin in system_list:              #origin is first object
+        targets = origin.connections                #targets is IDs of second object
+        for target_ID in targets:#target is single ID of object
+            target=system_list[target_ID]
+            rr, cc, val = dw.line_aa(origin.x_coord,origin.y_coord
+                                    ,target.x_coord,target.y_coord)
+            val = np.abs(val-max(val))
+            map_file[rr,cc] = colorify(val)*map_file[rr,cc]
+    return map_file
+
+def color_assignment(system_list):
+    color_dict={}
+    for system in system_list:
+        if system.owner_ID not in color_dict:
+            if system.owner_ID == -1:
+                color_dict[system.owner_ID] = (254,254,254)
+            else:
+                color_dict[system.owner_ID] = np.random.randint(0,high=255,size=3)
+    return color_dict
+
+
+def draw_territories(map_file,system_list,color_dict):
+    for size in range(0,120,1):
+        print("doing size ",size)
+        for system in system_list:
+            rr,cc=dw.circle_perimeter(system.x_coord,system.y_coord,size,method="andres",shape=(4000,4000))
+            map_file[rr,cc] = np.where(map_file[rr,cc]!=(255,255,255),map_file[rr,cc],color_dict[system.owner_ID])
+    return None
 
 nebula_list, system_list, starbase_list = save_reader(gamestate)
 system_find_owner(system_list,starbase_list)
 
-def coord_conv(coord,img_size,multiplier):
-    return (coord + (img_size/2)) * multiplier
 
-img_size = 4000
+img_size = 4000 #max coord is just below 500, multiplier is therefore 4.
+multiplier = 4
+system_coord_conv(system_list,img_size,multiplier)   #CHANGE THIS
 
+
+map_file=np.full([img_size,img_size,3],fill_value=255,dtype=np.uint8)
+
+color_dict = color_assignment(system_list)
+draw_territories(map_file,system_list,color_dict)                    
+draw_lines(map_file,system_list)
+draw_systems(map_file, system_list)
+map_file = np.rot90(map_file,k=3).astype(np.uint8)
+aiyo.imsave("test.png",map_file)
