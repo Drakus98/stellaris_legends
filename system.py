@@ -121,7 +121,7 @@ def draw_systems(map_file,system_list):
     return None
 
 
-def draw_lines(map_file,system_list,img_size,multiplier):
+def draw_lines(map_file,system_list):
     for origin in system_list:              #origin is first object
         targets = origin.connections                #targets is IDs of second object
         for target_ID in targets:#target is single ID of object
@@ -144,7 +144,7 @@ def draw_territories(map_file,system_list,color_dict):
     for size in range(0,120,1):
         print("doing size ",size)
         for system in system_list:
-            rr,cc=dw.disk(((system.x_coord/2),(system.y_coord/2)),size,shape=(4000,4000))
+            rr,cc=dw.disk((system.x_coord,system.y_coord),size,shape=(4000,4000))
             map_file[rr,cc] = np.where(map_file[rr,cc]!=(255,255,255),map_file[rr,cc],color_dict[system.owner_ID])
     return None
 
@@ -154,15 +154,14 @@ system_find_owner(system_list,starbase_list)
 
 img_size = 4000 #max coord is just below 500, multiplier is therefore 4.
 multiplier = 4
-system_coord_conv(system_list,8000,8)   #CHANGE THIS
+system_coord_conv(system_list,img_size,multiplier)   #CHANGE THIS
 
 
 map_file=np.full([img_size,img_size,3],fill_value=255,dtype=np.uint8)
 
 color_dict = color_assignment(system_list)
-draw_territories(map_file,system_list,color_dict)
-map_file = tf.resize(map_file,(8000,8000), mode='edge',anti_aliasing=True,preserve_range=True,order=0)                         
-draw_lines(map_file,system_list,img_size,multiplier)
+draw_territories(map_file,system_list,color_dict)                    
+draw_lines(map_file,system_list)
 draw_systems(map_file, system_list)
-map_file = np.rot90(map_file,k=3)
+map_file = np.rot90(map_file,k=3).astype(np.uint8)
 aiyo.imsave("test.png",map_file)
