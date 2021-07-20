@@ -144,7 +144,7 @@ def draw_territories(map_file,system_list,color_dict):
     for size in range(0,120,1):
         print("doing size ",size)
         for system in system_list:
-            rr,cc=dw.disk((system.x_coord,system.y_coord),size,shape=(4000,4000))
+            rr,cc=dw.circle_perimeter(system.x_coord,system.y_coord,size,method="andres",shape=(4000,4000))
             map_file[rr,cc] = np.where(map_file[rr,cc]!=(255,255,255),map_file[rr,cc],color_dict[system.owner_ID])
     return None
 
