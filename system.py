@@ -1,7 +1,9 @@
+from os import system
 import galaxy_objects as ob
 import numpy as np
 import skimage.draw as dw
 import skimage.io as aiyo
+import skimage.transform as tf
 
 gamestate = open("gamestate").read().replace("\t","    ").splitlines()
 
@@ -99,11 +101,13 @@ def system_find_owner(system_list,starbase_list):
             if system.starbase_ID == starbase.ID:
                 system.owner_ID = starbase.owner_ID
                 break
+    return None
 
 def system_coord_conv(system_list,img_size,multiplier):
     for system in system_list:
         system.x_coord = ((system.x_coord * multiplier) + int((img_size/2)))
         system.y_coord = ((system.y_coord * multiplier) + int((img_size/2)))
+    return None
 
 def colorify(fig):
     """Given a 2D array, returns that array stacked thrice over (i.e. converts greyscale to color)"""
@@ -113,7 +117,8 @@ def colorify(fig):
 def draw_systems(map_file,system_list):
     count = 0
     for system in system_list:
-        map_file[dw.disk((system.x_coord,system.y_coord),2.5)]=(230,30,37)
+        map_file[dw.disk((system.x_coord,system.y_coord),4)]=(230,30,37)
+    return None
 
 
 def draw_lines(map_file,system_list,img_size,multiplier):
@@ -126,18 +131,38 @@ def draw_lines(map_file,system_list,img_size,multiplier):
             val = np.abs(val-max(val))
             map_file[rr,cc] = colorify(val)*(132,213,243)
     return map_file
-    
+
+def color_assignment(system_list):
+    color_dict={}
+    for system in system_list:
+        if system.owner_ID not in color_dict:
+            color_dict[system.owner_ID] = np.random.randint(0,high=255,size=3)
+    return color_dict
+
+
+def draw_territories(map_file,system_list,color_dict):
+    for size in range(0,120,1):
+        print("doing size ",size)
+        for system in system_list:
+            rr,cc=dw.disk(((system.x_coord/2),(system.y_coord/2)),size,shape=(4000,4000))
+            map_file[rr,cc] = np.where(map_file[rr,cc]!=(255,255,255),map_file[rr,cc],color_dict[system.owner_ID])
+    return None
+
 nebula_list, system_list, starbase_list = save_reader(gamestate)
 system_find_owner(system_list,starbase_list)
 
 
 img_size = 4000 #max coord is just below 500, multiplier is therefore 4.
 multiplier = 4
-system_coord_conv(system_list,img_size,multiplier)
+system_coord_conv(system_list,8000,8)   #CHANGE THIS
 
 
 map_file=np.full([img_size,img_size,3],fill_value=255,dtype=np.uint8)
-draw_systems(map_file, system_list)
+
+color_dict = color_assignment(system_list)
+draw_territories(map_file,system_list,color_dict)
+map_file = tf.resize(map_file,(8000,8000), mode='edge',anti_aliasing=True,preserve_range=True,order=0)                         
 draw_lines(map_file,system_list,img_size,multiplier)
+draw_systems(map_file, system_list)
 map_file = np.rot90(map_file,k=3)
 aiyo.imsave("test.png",map_file)
