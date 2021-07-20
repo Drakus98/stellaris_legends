@@ -129,14 +129,17 @@ def draw_lines(map_file,system_list):
             rr, cc, val = dw.line_aa(origin.x_coord,origin.y_coord
                                     ,target.x_coord,target.y_coord)
             val = np.abs(val-max(val))
-            map_file[rr,cc] = colorify(val)*(132,213,243)
+            map_file[rr,cc] = colorify(val)*map_file[rr,cc]
     return map_file
 
 def color_assignment(system_list):
     color_dict={}
     for system in system_list:
         if system.owner_ID not in color_dict:
-            color_dict[system.owner_ID] = np.random.randint(0,high=255,size=3)
+            if system.owner_ID == -1:
+                color_dict[system.owner_ID] = (254,254,254)
+            else:
+                color_dict[system.owner_ID] = np.random.randint(0,high=255,size=3)
     return color_dict
 
 
