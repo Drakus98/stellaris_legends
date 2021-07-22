@@ -3,7 +3,7 @@ import galaxy_objects as ob
 import numpy as np
 import skimage.draw as dw
 import skimage.io as aiyo
-import skimage.transform as tf
+import skimage.segmentation as seg
 
 gamestate = open("gamestate").read().replace("\t","    ").splitlines()
 
@@ -139,7 +139,7 @@ def color_assignment(system_list):
             if system.owner_ID == -1:
                 color_dict[system.owner_ID] = (254,254,254)
             else:
-                color_dict[system.owner_ID] = np.random.randint(0,high=255,size=3)
+                color_dict[system.owner_ID] = np.random.randint(150,high=255,size=3)
     return color_dict
 
 
@@ -147,9 +147,13 @@ def draw_territories(map_file,system_list,color_dict):
     for size in range(0,120,1):
         print("doing size ",size)
         for system in system_list:
-            rr,cc=dw.circle_perimeter(system.x_coord,system.y_coord,size,method="andres",shape=(4000,4000))
+            rr,cc=dw.circle_perimeter(system.x_coord,system.y_coord,size,method="andres",shape=(map_file.shape))
             map_file[rr,cc] = np.where(map_file[rr,cc]!=(255,255,255),map_file[rr,cc],color_dict[system.owner_ID])
+    borders = (seg.find_boundaries(map_file[:,:,0],mode='thick'))
+    map_file[borders] = 0
     return None
+
+
 
 nebula_list, system_list, starbase_list = save_reader(gamestate)
 system_find_owner(system_list,starbase_list)
@@ -163,8 +167,9 @@ system_coord_conv(system_list,img_size,multiplier)   #CHANGE THIS
 map_file=np.full([img_size,img_size,3],fill_value=255,dtype=np.uint8)
 
 color_dict = color_assignment(system_list)
-draw_territories(map_file,system_list,color_dict)                    
+draw_territories(map_file,system_list,color_dict)
 draw_lines(map_file,system_list)
 draw_systems(map_file, system_list)
+
 map_file = np.rot90(map_file,k=3).astype(np.uint8)
 aiyo.imsave("test.png",map_file)
