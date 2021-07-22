@@ -2,6 +2,7 @@ class system:
     def __init__(self,line_number,ID,name,x_coord,y_coord,owner_ID,starbase_ID,connections) -> None:
         
         #critical attributes: these are to be found
+        self.line_number = line_number
         self.ID = ID
         self.name = name
         self.x_coord = x_coord
