@@ -1,5 +1,5 @@
 class system:
-    def __init__(self,line_number,ID,name,x_coord,y_coord,owner_ID,starbase_ID,connections) -> None:
+    def __init__(self,line_number,ID,name,x_coord,y_coord,owner_ID,starbase_ID,connections,closest,type) -> None:
         
         #critical attributes: these are to be found
         self.line_number = line_number
@@ -9,6 +9,8 @@ class system:
         self.y_coord = y_coord
         self.owner_ID = owner_ID
         self.connections = connections
+        self.closest = closest
+        self.starbase_type = type
 
         #intermediate attributes: these are used to find critical attributes
         self.starbase_ID = starbase_ID
@@ -26,7 +28,7 @@ class nebula:
         self.radius = radius
 
 class starbase:
-    def __init__(self,line_number,ID,level,owner_ID,modules,buildings) -> None:
+    def __init__(self,line_number,ID,level,owner_ID,modules,buildings,type) -> None:
 
         self.line_number = line_number
         self.ID = ID
@@ -34,3 +36,4 @@ class starbase:
         self.owner_ID = owner_ID
         self.modules = modules
         self.buildings = buildings
+        self.type = type
