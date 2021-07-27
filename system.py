@@ -63,7 +63,7 @@ def system_organizer(current_line,gamestate):
 
 def system_find_starbase_ID(line_number,gamestate):
     for sub_line_number in range(line_number + 1, line_number + 100):
-        if ("starbase=" in gamestate[sub_line_number]) and ("dpe_recent_talent" not in gamestate[sub_line_number]):
+        if " starbase=" in gamestate[sub_line_number]:
             return int(gamestate[sub_line_number][17:])
     return -1
 
